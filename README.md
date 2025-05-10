@@ -11,8 +11,9 @@ Visualize imagens 360
 
 
 #Start
-Inicie
+
 >flask run
 
 Modifique o host e a porta de inicialização:
-flask run --host=0.0.0.0 --port=8080
+
+>flask run --host=0.0.0.0 --port=8080
