@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <title>View 360º</title>
+    <meta charset="utf-8">
+    <!-- for optimal display on high DPI devices -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core/index.min.css" />
+</head>
+
+<style type="text/css">
+    body{
+            margin: 0px;
+    }
+
+</style>
+  <body>
+<!-- the viewer container must have a defined size -->
+<div id="viewer" style="width: 100vw; height: 100vh;"></div>
+
+<script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three/build/three.module.js",
+            "@photo-sphere-viewer/core": "https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core/index.module.js"
+        }
+    }
+</script>
+
+<script type="module">
+    import { Viewer } from '@photo-sphere-viewer/core';
+
+    const viewer = new Viewer({
+
+    navbar: [
+        'zoom',
+	'move',
+	'download',
+	'caption',
+        'fullscreen',
+    ],
+	caption:'<b>&copy; JDOS</b>',
+        container: document.querySelector('#viewer'),
+	    panorama: "static/images/DJI_20241030151411_0046_D.JPG",
+    });
+</script>
+
+  </body>
+</html>
