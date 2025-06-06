@@ -44,8 +44,11 @@
     ],
 	caption:'<b>&copy; JDOS</b>',
         container: document.querySelector('#viewer'),
-	    panorama: "static/images/DJI_20241030151411_0046_D.JPG",
+	    panorama: "{{ panorama_url }}",
+        minFov: 5,
     });
+
+    
 </script>
 
   </body>

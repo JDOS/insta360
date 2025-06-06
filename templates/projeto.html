@@ -17,15 +17,6 @@
 </head>
 
 <body>
-    <div class="background"></div>
-
-    <div class="content">
-        <h1>Bem-vindo!</h1>
-	    <h2>INSTA 360</h2>
-        <p>Faça seu Tour!</p>
-
-        <div class="arrow" onclick="scrollToCards()">⬇</div>
-    </div>
 
         <div class="cards-section" id="cards">
             <div class="card" style="width: 18rem;">
@@ -34,10 +25,9 @@
                 <h5 class="card-title">Ilha do Mel</h5>
                 <p class="card-text">Visualize a Ilha em 360º</p>
                 <a href="{{ url_for('view360',url='static/images/DJI_20241030151411_0046_D.JPG') }}" class="btn btn-primary">Visualizar</a>
-                <a href="{{ url_for('animacao',url='static/images/DJI_20241030151411_0046_D.JPG') }}" class="btn btn-primary">Animacao</a>
             </div>
             </div>
-        </div>
+</div>
 
 </body>
 </html>
