@@ -9,7 +9,6 @@ Visualize imagens 360
 >pip install -r requeriments
 
 
-
 #Start
 
 >flask run
