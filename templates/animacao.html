@@ -50,7 +50,7 @@ const animatedValues = {
 
 const viewer = new Viewer({
     container: 'viewer',
-    panorama: baseUrl + 'DJI_20241030151411_0046_D.JPG',
+    panorama: "{{ panorama_url }}",
     caption: '<b>&copy; JDOS</b>',
     defaultPitch: animatedValues.pitch.start,
     defaultYaw: animatedValues.yaw.start,

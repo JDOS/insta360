@@ -25,5 +25,5 @@ def animacao():
     baseurl='static/images/DJI_20241030151411_0046_D.JPG'
     image='DJI_20241030151411_0046_D.JPG'
     panorama_url = request.args.get('url')
-    return render_template('animacao.html', image=image, baseurl=baseurl)
+    return render_template('animacao.html', image=image, baseurl=baseurl, panorama_url=panorama_url)
 
