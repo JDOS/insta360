@@ -59,8 +59,8 @@
                     <div class="card" style="width: 18rem;">
                         <img src="{{fotografia.foto.url}}" class="card-img-top" alt="...">
                             <div class="card-body">
-                                <h5 class="card-title">{{fotografia.categoria}}</h5>
-                                <p class="card-text">{{fotografia.nome}}</p>
+                                <h5 class="card-title">{{fotografia.nome}}</h5>
+                                <p class="card-text">{{fotografia.descricao}}</p>
                                 <a href="{% url 'imagem360' fotografia.id %}" class="btn btn-primary">Visualizar</a>
                                 <a href="{% url 'imagem360Animacao' fotografia.id %}" class="btn btn-primary">Animacao</a>
                             </div>
