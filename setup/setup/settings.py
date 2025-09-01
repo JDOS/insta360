@@ -27,7 +27,7 @@ SECRET_KEY = "django-insecure-a7m&klfnb6@i4za4n56l&qj#36mrl-c9p76s24^&+7th-04f8$
 DEBUG = True
 
 ALLOWED_HOSTS = ["localhost","sistemas.itti.org.br","200.236.20.133","127.0.0.1"]
-CSRF_TRUSTED_ORIGINS = ["https://localhost:8000", "http://127.0.0.1:8000", "http://127.0.0.1:8081","https://sistemas.itti.org.br:8081", "https://sistemas.itti.org.br"]
+CSRF_TRUSTED_ORIGINS = ["https://localhost:8000", "http://127.0.0.1:8000", "https://127.0.0.1:8081","https://sistemas.itti.org.br:8081", "https://sistemas.itti.org.br", "127.0.0.1", "sistemas.itti.org.br"]
 
 # Application definition
 
