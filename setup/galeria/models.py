@@ -5,7 +5,7 @@ class Categoria(models.Model):
     nome = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=120, unique=True)
     descricao = models.TextField(blank=True)
-
+    foto = models.ImageField(upload_to="fotos/%Y/%m/%d/", blank=True)
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
 
@@ -21,8 +21,8 @@ class Categoria(models.Model):
 class Fotografia(models.Model):
 
     nome = models.CharField(max_length=100, null=False, blank=False)
-    legenda = models.CharField(max_length=150, null=False, blank=False)
-    descricao = models.TextField(null=False, blank=False)
+    legenda = models.CharField(max_length=150, null=True, blank=True)
+    descricao = models.TextField(null=True, blank=True)
     categoria = models.ForeignKey(
         Categoria,
         on_delete=models.PROTECT,     

@@ -31,14 +31,15 @@
 
         <div class="cards-section d-flex flex-row flex-wrap justify-content-center gap-3" id="cards">
                       
-                {%for fotografia in fotografias %}
+                {%for categoria in categorias %}
                     <div class="card" style="width: 18rem;">
-                        <img src="{{fotografia.foto.url}}" class="card-img-top" alt="...">
+                        {% if categoria.foto %}
+                        <img src="{{categoria.foto.url}}" class="card-img-top" alt="...">
+                        {% endif %}
                             <div class="card-body">
-                                <h5 class="card-title">Ararapira</h5>
-                                <p class="card-text">Visualize - {{fotografia.nome}}</p>
-                                <a href="{% url 'imagem360' fotografia.id %}" class="btn btn-primary">Visualizar</a>
-                                <a href="{% url 'imagem360Animacao' fotografia.id %}" class="btn btn-primary">Animacao</a>
+                                <h5 class="card-title">{{categoria.nome|title}}</h5>
+                                  <p class="card-text">{{categoria.descricao}}</p>
+                                  <a href="{% url 'projeto' categoria.id %}" class="btn btn-primary">Visualizar</a>
                             </div>
                     </div>
                 {% endfor %}
