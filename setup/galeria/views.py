@@ -15,5 +15,6 @@ def imagem360(request, foto_id):
     return render(request, 'galeria/view360.html', {"fotografia":fotografia})
 
 def projeto(request, categoria_id):
+    categoria = Categoria.objects.get(pk=categoria_id)
     fotografias = Fotografia.objects.order_by("nome").filter(pk=categoria_id, publicada=True)
-    return render(request,'galeria/projeto.html', {"fotografias":fotografias})
+    return render(request,'galeria/projeto.html', {"fotografias":fotografias,"categoria": categoria})
