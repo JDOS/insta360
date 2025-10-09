@@ -69,7 +69,7 @@
 
                  {%for album in albuns %}
                     <div class="card" style="width: 18rem;">
-                        {% if categoria.foto %}
+                        {% if album.foto %}
                         <img src="{{album.foto.url}}" class="card-img-top" alt="...">
                         {% endif %}
                             <div class="card-body">
