@@ -15,7 +15,7 @@
 
       <link rel="stylesheet" href="{% static '/styles/styles.css' %}">
 
-   <title>INSTA 360º - {{categoria.nome }}</title>
+   <title>INSTA 360º - {{album.title}}</title>
 
     <style>
 
@@ -45,10 +45,10 @@
 <body>
     <div class"header-categoria">
 
-        {% if categoria.foto %}
-             <img src="{{categoria.foto.url}}" class="imagem-top" alt="...">
+        {% if album.foto %}
+             <img src="{{album.foto.url}}" class="imagem-top" alt="...">
         {% endif %}
-        <h1 class="categoria-title">{{categoria.nome}}</h1>
+        <h1 class="categoria-title">{{album.title}}</h1>
 
 
     </div>
@@ -61,29 +61,13 @@
                             <div class="card-body">
                                 <h5 class="card-title">{{fotografia.nome}}</h5>
                                 <p class="card-text">{{fotografia.descricao}}</p>
-                                <a href="{% url 'imagem360' fotografia.id %}" class="btn btn-primary">Visualizar</a>
+                                <a href="{% url 'fotoAlbum360' fotografia.album.slug fotografia.nome %}" class="btn btn-primary">Visualizar</a>
                                 <a href="{% url 'imagem360Animacao' fotografia.id %}" class="btn btn-primary">Animacao</a>
                             </div>
                     </div>
                 {% endfor %}
 
-                 {%for album in albuns %}
-                    <div class="card" style="width: 18rem;">
-                        {% if categoria.foto %}
-                        <img src="{{album.foto.url}}" class="card-img-top" alt="...">
-                        {% endif %}
-                            <div class="card-body">
-                                <h5 class="card-title">{{album.title}}</h5>
-                                <p class="card-text"></p>
-                                <a href="{% url 'album' album.id %}" class="btn btn-primary">Visualizar Álbum</a>
-                            </div>
-                    </div>
-                {% endfor %}
-
-
         </div>  
-
-
 
 </body>
 </html>

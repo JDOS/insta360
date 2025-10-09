@@ -1,3 +1,5 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="pt-br">
   <head>
@@ -5,8 +7,6 @@
     <meta charset="utf-8">
     <!-- for optimal display on high DPI devices -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core/index.min.css" />
 </head>
@@ -42,9 +42,9 @@
 	'caption',
         'fullscreen',
     ],
-	caption:'<b>&copy; JDOS</b>',
+	caption:'<b>&copy; ITTI</b>',
         container: document.querySelector('#viewer'),
-	    panorama: "{{ panorama_url }}",
+	    panorama: "{{ fotografia.foto.url }}",
         minFov: 5,
     });
 

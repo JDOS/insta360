@@ -11,8 +11,4 @@ Visualize imagens 360
 
 #Start
 
->flask run
-
-Modifique o host e a porta de inicialização:
-
->flask run --host=0.0.0.0 --port=8080
+>python manage.py runserver

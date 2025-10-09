@@ -1,0 +1,130 @@
+{% extends "admin/base_site.html" %}
+
+{% block extrahead %}
+  {{ block.super }}
+  <style>
+    .upload-area {
+      max-width: 800px;
+      margin: 30px auto;
+      padding: 40px;
+      border: 3px dashed #79aec8;
+      border-radius: 10px;
+      background: #f0f8ff;
+      text-align: center;
+    }
+    .upload-area:hover {
+      background: #e6f3ff;
+      border-color: #5b9bd5;
+    }
+    input[type="file"] {
+      display: block;
+      margin: 20px auto;
+      padding: 15px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .big-button {
+      background: #417690;
+      color: white;
+      border: none;
+      padding: 15px 40px;
+      font-size: 18px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    .big-button:hover {
+      background: #5b9bd5;
+    }
+    .instructions {
+      background: #fff3cd;
+      border: 2px solid #ffc107;
+      padding: 20px;
+      margin: 20px auto;
+      max-width: 800px;
+      border-radius: 5px;
+    }
+    .file-count {
+      font-size: 18px;
+      font-weight: bold;
+      color: #417690;
+      margin-top: 15px;
+    }
+  </style>
+{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Início</a>
+    &rsaquo; <a href="{% url 'admin:galeria_album_changelist' %}">Álbuns</a>
+    &rsaquo; <a href="{% url 'admin:galeria_album_change' album.pk %}">{{ album.title }}</a>
+  </div>
+{% endblock %}
+
+{% block content %}
+  
+  <form method="post" enctype="multipart/form-data" id="uploadForm">
+    {% csrf_token %}
+    
+    <div class="upload-area">
+      <h2>🖼️ Selecione suas fotos</h2>
+      <p style="font-size: 16px; color: #666;">Você pode selecionar centenas de fotos de uma vez!</p>
+      
+      <input 
+        type="file" 
+        name="images" 
+        id="fileInput"
+        multiple 
+        accept="image/*"
+        required
+      >
+      
+      <div id="fileCount" class="file-count"></div>
+      
+      <button type="submit" class="big-button">
+        📤 ENVIAR TODAS AS FOTOS
+      </button>
+      
+      <div style="margin-top: 20px;">
+        <a href="{% url 'admin:galeria_album_change' album.pk %}" style="color: #666;">← Voltar</a>
+      </div>
+    </div>
+  </form>
+  
+  <div style="text-align: center; margin-top: 30px; padding: 20px; background: #f8f8f8;">
+    <strong>Fotos atuais no álbum:</strong> {{ album.photos.count }}
+  </div>
+  
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const fileCount = document.getElementById('fileCount');
+    const form = document.getElementById('uploadForm');
+    
+    // Mostrar quantos arquivos foram selecionados
+    fileInput.addEventListener('change', function(e) {
+      const count = e.target.files.length;
+      if (count > 0) {
+        fileCount.innerHTML = `✅ <strong>${count} foto(s) selecionada(s)</strong>`;
+        fileCount.style.color = 'green';
+      } else {
+        fileCount.innerHTML = '';
+      }
+    });
+    
+    // Mostrar progresso ao enviar
+    form.addEventListener('submit', function(e) {
+      const count = fileInput.files.length;
+      if (count === 0) {
+        alert('❌ Selecione pelo menos uma foto!');
+        e.preventDefault();
+        return;
+      }
+      
+      // Mostrar mensagem de carregamento
+      const button = form.querySelector('button[type="submit"]');
+      button.disabled = true;
+      button.innerHTML = `⏳ Enviando ${count} foto(s)... Aguarde!`;
+      button.style.background = '#ffc107';
+    });
+  </script>
+{% endblock %}

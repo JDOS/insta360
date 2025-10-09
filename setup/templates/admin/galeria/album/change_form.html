@@ -1,0 +1,13 @@
+{% extends "admin/change_form.html" %}
+
+{% block object-tools-items %}
+  {{ block.super }}
+  {% if original and show_bulk_upload %}
+    <li>
+      <a href="{% url 'admin:galeria_album_bulk_upload' original.pk %}" 
+         style="background: #38b45d; color: white;font-weight: bold;">
+        📤 UPLOAD MÚLTIPLO
+      </a>
+    </li>
+  {% endif %}
+{% endblock %}
