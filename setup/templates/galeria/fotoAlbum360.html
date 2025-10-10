@@ -46,6 +46,13 @@
         container: document.querySelector('#viewer'),
 	    panorama: "{{ fotografia.foto.url }}",
         minFov: 5,
+        defaultYaw: '{{defaultYaw}}',        // Ajuste horizontal (em radianos ou graus)
+        defaultPitch: '{{defaultPitch}}',      // Ajuste vertical (em radianos ou graus)
+        sphereCorrection: {   // Correção da esfera para imagens tortas
+            pan: '{{pan}}',           // Rotação horizontal (ajuste conforme necessário)
+            tilt: '{{tilt}}',          // Inclinação vertical (ajuste conforme necessário)
+            roll: '{{roll}}'           // Rotação no eixo Z (ajuste conforme necessário)
+        }
     });
 
     

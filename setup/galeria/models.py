@@ -22,6 +22,44 @@ class Album(models.Model):
     title = models.CharField('Título', max_length=200)
     foto = models.ImageField(upload_to="fotos/%Y/%m/%d/", blank=True)
     slug = models.SlugField(max_length=200, unique=True, blank=True)
+
+    # POSIÇÃO INICIAL DA CÂMERA
+    defaultYaw = models.CharField(
+        'Rotação Horizontal Inicial',
+        max_length=20,
+        default='0deg',
+        help_text='Direção horizontal inicial da câmera ao carregar. Exemplos: "0deg" (frente), "90deg" (direita), "-90deg" (esquerda), "180deg" (trás)'
+    )
+    
+    defaultPitch = models.CharField(
+        'Inclinação Vertical Inicial',
+        max_length=20,
+        default='0deg',
+        help_text='Inclinação vertical inicial da câmera. Exemplos: "0deg" (horizonte), "45deg" (olhando para cima), "-45deg" (olhando para baixo)'
+    )
+    
+    # CORREÇÃO DA ESFERA (para fotos tortas/desalinhadas)
+    sphereCorrection_pan = models.CharField(
+        'Correção Horizontal (Pan)',
+        max_length=20,
+        default='0deg',
+        help_text='Corrige rotação horizontal da foto. Use valores positivos para rotacionar à direita, negativos para esquerda. Ex: "10deg", "-15deg"'
+    )
+    
+    sphereCorrection_tilt = models.CharField(
+        'Correção Vertical (Tilt)',
+        max_length=20,
+        default='0deg',
+        help_text='Corrige inclinação vertical da foto. Valores positivos inclinam para cima, negativos para baixo. Ex: "5deg", "-10deg"'
+    )
+    
+    sphereCorrection_roll = models.CharField(
+        'Correção de Rotação (Roll)',
+        max_length=20,
+        default='0deg',
+        help_text='Corrige foto torta/rotacionada. Valores positivos rotacionam no sentido horário, negativos anti-horário. Ex: "15deg", "-20deg"'
+    )
+    
     categoria = models.ForeignKey(
         Categoria,
         on_delete=models.PROTECT,     
