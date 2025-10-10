@@ -73,10 +73,17 @@ class AlbumAdmin(admin.ModelAdmin):
                     'title': f'Upload múltiplo - {album.title}',
                     'album': album,
                 })
+
+            ultima_foto = Fotografia.objects.filter(album=object_id).order_by('-id').first()
+            if ultima_foto:
+                ultimo_nome = int(ultima_foto.nome) + 1
+            else:
+                ultimo_nome=0
+
             # ORDENAR por nome (ordem crescente)
             images_sorted = sorted(images, key=lambda x: x.name)
             # Criar fotos sem validação complexa (para testar)
-            photos = [Fotografia(album=album, foto=img, nome=str(index)) for index,img in enumerate(images_sorted)]
+            photos = [Fotografia(album=album, foto=img, nome=str(ultimo_nome+index)) for index,img in enumerate(images_sorted)]
             
             Fotografia.objects.bulk_create(photos)
             
