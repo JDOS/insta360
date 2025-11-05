@@ -60,6 +60,8 @@ class Album(models.Model):
         help_text='Corrige foto torta/rotacionada. Valores positivos rotacionam no sentido horário, negativos anti-horário. Ex: "15deg", "-20deg"'
     )
     
+    inverterSentidoStreetView = models.BooleanField(default=False)
+
     categoria = models.ForeignKey(
         Categoria,
         on_delete=models.PROTECT,     

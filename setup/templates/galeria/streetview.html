@@ -24,6 +24,18 @@
   <script src="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/gallery-plugin@5/index.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/virtual-tour-plugin@5/index.min.js"></script>
   <script>
+
+    {% if inverterSentidoStreetView %}
+
+      const sentido_frente = {{defaultYawInteger}};
+      const sentido_voltar = parseInt({{defaultYawInteger}}, 10) * -1;
+
+    {% else %}
+      const sentido_frente = parseInt({{defaultYawInteger}}, 10) * -1;
+      const sentido_voltar = parseInt({{defaultYawInteger}}, 10);
+    {% endif %}
+
+    console.log("sentido voltar",sentido_voltar);
     const nodes = [
       {% for foto in fotos %}
         {
@@ -38,13 +50,13 @@
           links: [
             {% if not forloop.last %}
               { nodeId: 'node-{{ forloop.counter|add:1 }}',
-                position: {yaw:'{{defaultYaw}}', pitch:0},
+                position: {yaw: sentido_frente, pitch:0},
                },
             {% endif %}
             
             {% if not forloop.first %}
                { nodeId: 'node-{{ forloop.counter|add:-1 }}',
-                position: {yaw:'-'+'{{defaultYaw}}', pitch:0},
+                position: {yaw: sentido_voltar, pitch:0},
                },
             {% endif %}
 
