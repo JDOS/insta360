@@ -38,13 +38,13 @@
           links: [
             {% if not forloop.last %}
               { nodeId: 'node-{{ forloop.counter|add:1 }}',
-                position: {yaw:90, pitch:0},
+                position: {yaw:'{{defaultYaw}}', pitch:0},
                },
             {% endif %}
             
             {% if not forloop.first %}
                { nodeId: 'node-{{ forloop.counter|add:-1 }}',
-                position: {yaw:-90, pitch:0},
+                position: {yaw:'-'+'{{defaultYaw}}', pitch:0},
                },
             {% endif %}
 
