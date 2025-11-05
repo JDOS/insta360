@@ -45,4 +45,4 @@ def streetView(request, album_id):
     defaultYawInteger = int(defaultYaw.replace('deg', ''))
     fotos = Fotografia.objects.filter(album=album.id).order_by('id')
     inverterSentidoStreetView = album.inverterSentidoStreetView
-    return render(request, 'galeria/streetview.html', {"fotos":fotos, "defaultYaw":defaultYaw,"defaultYawInteger":defaultYawInteger, "defaultPitch":defaultPitch, "pan":pan, "tilt":tilt, "roll": roll, "inverterSentidoStreetView":inverterSentidoStreetView})
+    return render(request, 'galeria/streetview.html', {"album":album,"fotos":fotos, "defaultYaw":defaultYaw,"defaultYawInteger":defaultYawInteger, "defaultPitch":defaultPitch, "pan":pan, "tilt":tilt, "roll": roll, "inverterSentidoStreetView":inverterSentidoStreetView})

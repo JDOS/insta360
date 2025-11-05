@@ -3,7 +3,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Tour Virtual com Photo Sphere Viewer</title>
+  <title>Tour 360 - {{album.title}}</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core@5/index.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/gallery-plugin@5/index.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/virtual-tour-plugin@5/index.min.css">
@@ -41,7 +41,7 @@
         {
           id: 'node-{{ forloop.counter }}',
           panorama: '{{ foto.foto.url }}',
-          caption: 'Foto-{{ foto.nome }}',
+          caption: '{{album.title}}:Foto-{{ foto.nome }}',
           sphereCorrection: {
             pan: '{{pan}}',          
             tilt: '{{tilt}}',          
