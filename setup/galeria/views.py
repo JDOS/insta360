@@ -35,5 +35,12 @@ def fotoAlbum360(request, nome, album_slug):
     fotografia = get_object_or_404(Fotografia,album__slug=album_slug, nome=nome)
     return render(request, 'galeria/fotoAlbum360.html', {"fotografia":fotografia, "defaultYaw":defaultYaw, "defaultPitch":defaultPitch, "pan":pan, "tilt":tilt, "roll": roll})
 
-
-
+def streetView(request, album_id):
+    album = get_object_or_404(Album, pk=album_id)
+    defaultYaw = album.defaultYaw
+    defaultPitch = album.defaultPitch
+    pan = album.sphereCorrection_pan
+    tilt = album.sphereCorrection_tilt     
+    roll = album.sphereCorrection_roll  
+    fotos = Fotografia.objects.filter(album=album.id)
+    return render(request, 'galeria/streetview.html', {"fotos":fotos, "defaultYaw":defaultYaw, "defaultPitch":defaultPitch, "pan":pan, "tilt":tilt, "roll": roll})

@@ -1,0 +1,78 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tour Virtual com Photo Sphere Viewer</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core@5/index.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/gallery-plugin@5/index.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/virtual-tour-plugin@5/index.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/markers-plugin@5/index.min.css">
+  <style>
+        body{
+            margin: 0px;
+    }
+
+    #viewer { width: 100%; height: 600px; }
+  </style>
+</head>
+<body>
+  <div id="viewer" style="width: 100vw; height: 100vh;"></div>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.152.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core@5/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/markers-plugin@5/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/gallery-plugin@5/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/virtual-tour-plugin@5/index.min.js"></script>
+  <script>
+    const nodes = [
+      {% for foto in fotos %}
+        {
+          id: 'node-{{ forloop.counter }}',
+          panorama: '{{ foto.foto.url }}',
+          caption: 'Foto-{{ foto.nome }}',
+          sphereCorrection: {
+            pan: '{{pan}}',          
+            tilt: '{{tilt}}',          
+            roll: '{{roll}}'                
+          },
+          links: [
+            {% if not forloop.last %}
+              { nodeId: 'node-{{ forloop.counter|add:1 }}',
+                position: {yaw:90, pitch:0},
+               },
+            {% endif %}
+            
+            {% if not forloop.first %}
+               { nodeId: 'node-{{ forloop.counter|add:-1 }}',
+                position: {yaw:-90, pitch:0},
+               },
+            {% endif %}
+
+          ]
+
+        }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    ];
+
+    const viewer = new PhotoSphereViewer.Viewer({
+      container: document.getElementById('viewer'),
+      loadingImg: 'https://photo-sphere-viewer-data.netlify.app/assets/loader.gif',
+      touchmoveTwoFingers: true,
+      mousewheelCtrlKey: true,
+      defaultZoomLvl: 0,
+      defaultYaw: '30deg',
+      navbar: 'zoom move gallery caption fullscreen',
+      plugins: [
+        [PhotoSphereViewer.MarkersPlugin],
+        [PhotoSphereViewer.GalleryPlugin, { thumbnailSize: { width: 100, height: 100 } }],
+        [PhotoSphereViewer.VirtualTourPlugin, {
+          positionMode: 'manual',
+          renderMode: '3d',
+          nodes: nodes,
+          startNodeId: 'node-1',
+        }],
+      ],
+    });
+  </script>
+</body>
+</html>

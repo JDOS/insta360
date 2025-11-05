@@ -76,6 +76,7 @@
                                 <h5 class="card-title">{{album.title}}</h5>
                                 <p class="card-text"></p>
                                 <a href="{% url 'album' album.id %}" class="btn btn-primary">Visualizar Álbum</a>
+                                <a href="{% url 'streetView' album.id %}" class="btn btn-primary">Visualizar StreetView</a>
                             </div>
                     </div>
                 {% endfor %}
