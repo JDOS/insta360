@@ -42,5 +42,5 @@ def streetView(request, album_id):
     pan = album.sphereCorrection_pan
     tilt = album.sphereCorrection_tilt     
     roll = album.sphereCorrection_roll  
-    fotos = Fotografia.objects.filter(album=album.id)
+    fotos = Fotografia.objects.filter(album=album.id).order_by('id')
     return render(request, 'galeria/streetview.html', {"fotos":fotos, "defaultYaw":defaultYaw, "defaultPitch":defaultPitch, "pan":pan, "tilt":tilt, "roll": roll})
