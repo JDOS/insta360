@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mapa - {{ album.title }}</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    body { margin: 0; font-family: sans-serif; }
+    header { padding: 10px; display: flex; align-items: center; gap: 12px; }
+    #map { height: 85vh; width: 100%; }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="javascript:history.back()">&larr; Voltar</a>
+    <h1 style="margin:0; font-size:1.3em;">{{ album.title }}</h1>
+    <span id="status">Carregando KML...</span>
+  </header>
+
+  <div id="map"></div>
+
+  {{ kml_url|json_script:"kml-url" }}
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/@tmcw/togeojson@5.8.1/dist/togeojson.umd.js"></script>
+<script>
+  const kmlUrl = JSON.parse(document.getElementById("kml-url").textContent);
+  const status = document.getElementById("status");
+
+  const map = L.map("map").setView([-25.43, -48.92], 13);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    referrerPolicy: "strict-origin-when-cross-origin"
+  }).addTo(map);
+
+  // A description pode vir como texto ou como {"@type": "html", "value": "..."}
+  function textoDescricao(desc) {
+    if (!desc) return "";
+    if (typeof desc === "object") return desc.value || "";
+    return desc;
+  }
+
+  fetch(kmlUrl)
+    .then(r => {
+      if (!r.ok) throw new Error("Erro HTTP " + r.status);
+      return r.text();
+    })
+    .then(texto => {
+      const kml = new DOMParser().parseFromString(texto, "text/xml");
+      const geojson = toGeoJSON.kml(kml);
+
+      const camada = L.geoJSON(geojson, {
+        // Linha da trilha: usa a cor do KML, ou vermelho se não houver
+        style: f => ({
+          color: f.properties.stroke || "#e63946",
+          weight: f.properties["stroke-width"] || 4
+        }),
+
+        // Pontos das fotos: bolinhas clicáveis
+        pointToLayer: (f, latlng) => L.circleMarker(latlng, {
+          radius: 6,
+          color: "#ffffff",
+          weight: 2,
+          fillColor: "#1d70b8",
+          fillOpacity: 1
+        }),
+
+        onEachFeature: (f, layer) => {
+          const p = f.properties || {};
+          const desc = textoDescricao(p.description);
+
+          if (desc) {
+            layer.bindPopup(desc);  // mostra o link "Ver foto 360"
+          } else if (p.name) {
+            layer.bindPopup(`<b>${p.name}</b>`);
+          }
+          if (p.name) layer.bindTooltip(p.name);
+        }
+      }).addTo(map);
+
+      if (camada.getLayers().length) {
+        map.fitBounds(camada.getBounds());
+      }
+      status.textContent = `${geojson.features.length} feições carregadas.`;
+    })
+    .catch(err => {
+      console.error(err);
+      status.textContent = "Falha ao carregar KML: " + err.message;
+    });
+</script>
+</body>
+</html>

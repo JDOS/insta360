@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from galeria.models import Fotografia, Categoria, Album
 from django.db.models import IntegerField
 from django.db.models.functions import Cast
+from django.http import Http404
 
 
 def index(request):
@@ -53,3 +54,12 @@ def streetView(request, album_id):
     fotos = Fotografia.objects.filter(album=album.id).order_by('id')
     inverterSentidoStreetView = album.inverterSentidoStreetView
     return render(request, 'galeria/streetview.html', {"album":album,"fotos":fotos, "defaultYaw":defaultYaw,"defaultYawInteger":defaultYawInteger, "defaultPitch":defaultPitch, "pan":pan, "tilt":tilt, "roll": roll, "inverterSentidoStreetView":inverterSentidoStreetView})
+
+def mapa(request, pk):
+    album = get_object_or_404(Album, pk=pk)
+    if not album.arquivo_kml:
+        raise Http404("Este álbum não tem arquivo KML.")
+    return render(request, "galeria/mapa.html", {
+        "album": album,
+        "kml_url": album.arquivo_kml.url,
+    })

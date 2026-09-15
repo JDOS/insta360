@@ -77,6 +77,9 @@
                                 <p class="card-text"></p>
                                 <a href="{% url 'album' album.id %}" class="btn btn-primary">Álbum</a>
                                 <a href="{% url 'streetView' album.id %}" class="btn btn-primary">Street View</a>
+                                {% if album.arquivo_kml %}
+                                <a href="{% url 'mapa' album.pk %}" class="btn btn-primary">Mapa</a>
+                                {% endif %}
                             </div>
                     </div>
                 {% endfor %}

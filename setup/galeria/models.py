@@ -1,6 +1,7 @@
 from django.db import models
 from datetime import datetime
 from django.utils.text import slugify
+from django.core.validators import FileExtensionValidator
 
 class Categoria(models.Model):
     nome = models.CharField(max_length=100, unique=True)
@@ -21,6 +22,13 @@ class Categoria(models.Model):
 class Album(models.Model):
     title = models.CharField('Título', max_length=200)
     foto = models.ImageField(upload_to="fotos/%Y/%m/%d/", blank=True)
+    arquivo_kml = models.FileField(
+        'Arquivo KML',
+        upload_to="kml/%Y/%m/%d/",
+        blank=True,
+        validators=[FileExtensionValidator(allowed_extensions=['kml'])],
+        help_text='Arquivo .kml com o trajeto ou os pontos do álbum (opcional)'
+    )
     slug = models.SlugField(max_length=200, unique=True, blank=True)
 
     # POSIÇÃO INICIAL DA CÂMERA
