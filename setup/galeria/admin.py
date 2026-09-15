@@ -6,6 +6,9 @@ from django.urls import path, reverse
 
 from django.utils.html import format_html
 
+from django.db.models import IntegerField
+from django.db.models.functions import Cast
+
 @admin.register(Categoria)
 class CategoriaAdmin(admin.ModelAdmin):
     list_display = ("nome", "slug")
@@ -32,6 +35,12 @@ class PhotoInline(admin.TabularInline):
         if obj.foto:
             return format_html('<img src="{}" style="max-height: 50px;" />', obj.foto.url)
         return '-'
+
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.order_by(Cast("nome", IntegerField()))
+    
     image_preview.short_description = 'Preview'
 
 
