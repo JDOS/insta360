@@ -5,18 +5,98 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mapa - {{ album.title }}</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    body { margin: 0; font-family: sans-serif; }
-    header { padding: 10px; display: flex; align-items: center; gap: 12px; }
-    #map { height: 85vh; width: 100%; }
+    html, body {
+      margin: 0;
+      height: 100%;
+      font-family: "Poppins", system-ui, sans-serif;
+    }
+
+    /* Mapa em tela cheia */
+    #map {
+      position: fixed;
+      inset: 0;
+      height: 100vh;
+      height: 100dvh; /* corrige a altura em celulares */
+      width: 100%;
+    }
+
+    /* Cartão do título, flutuando sobre o mapa */
+    .titulo-album {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 1000; /* acima do mapa */
+      max-width: calc(100% - 32px);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 20px 12px 12px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(8px);
+      border-radius: 14px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18);
+      box-sizing: border-box;
+    }
+
+    .btn-voltar {
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #1d70b8;
+      color: #fff;
+      font-size: 20px;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .btn-voltar:hover { background: #155a94; }
+
+    .titulo-album h1 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1a1a1a;
+      line-height: 1.2;
+    }
+
+    .titulo-album .subtitulo {
+      display: block;
+      margin-top: 2px;
+      font-size: 0.8rem;
+      color: #666;
+    }
+
+    /* Popup com o link da foto */
+    .leaflet-popup-content a {
+      display: inline-block;
+      padding: 6px 12px;
+      background: #1d70b8;
+      color: #fff !important;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .leaflet-popup-content a:hover { background: #155a94; }
+
+    @media (max-width: 500px) {
+      .titulo-album { top: 10px; left: 10px; max-width: calc(100% - 20px); }
+      .titulo-album h1 { font-size: 1rem; }
+    }
   </style>
 </head>
 <body>
-  <header>
-    <a href="javascript:history.back()">&larr; Voltar</a>
-    <h1 style="margin:0; font-size:1.3em;">{{ album.title }}</h1>
-    <span id="status">Carregando KML...</span>
-  </header>
+  <div class="titulo-album">
+    <a href="javascript:history.back()" class="btn-voltar" title="Voltar">&larr;</a>
+    <div>
+      <h1>{{ album.title }}</h1>
+      <span class="subtitulo" id="status">Carregando mapa...</span>
+    </div>
+  </div>
 
   <div id="map"></div>
 
@@ -24,71 +104,80 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/@tmcw/togeojson@5.8.1/dist/togeojson.umd.js"></script>
-<script>
-  const kmlUrl = JSON.parse(document.getElementById("kml-url").textContent);
-  const status = document.getElementById("status");
+  <script>
+    const kmlUrl = JSON.parse(document.getElementById("kml-url").textContent);
+    const status = document.getElementById("status");
 
-  const map = L.map("map").setView([-25.43, -48.92], 13);
-  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    referrerPolicy: "strict-origin-when-cross-origin"
-  }).addTo(map);
+    // zoomControl: false para reposicionar os botões de zoom
+    const map = L.map("map", { zoomControl: false }).setView([-25.43, -48.92], 13);
+    L.control.zoom({ position: "bottomright" }).addTo(map);
 
-  // A description pode vir como texto ou como {"@type": "html", "value": "..."}
-  function textoDescricao(desc) {
-    if (!desc) return "";
-    if (typeof desc === "object") return desc.value || "";
-    return desc;
-  }
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 22,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      referrerPolicy: "strict-origin-when-cross-origin"
+    }).addTo(map);
 
-  fetch(kmlUrl)
-    .then(r => {
-      if (!r.ok) throw new Error("Erro HTTP " + r.status);
-      return r.text();
-    })
-    .then(texto => {
-      const kml = new DOMParser().parseFromString(texto, "text/xml");
-      const geojson = toGeoJSON.kml(kml);
+    // A description pode vir como texto ou como {"@type": "html", "value": "..."}
+    function textoDescricao(desc) {
+      if (!desc) return "";
+      if (typeof desc === "object") return desc.value || "";
+      return desc;
+    }
 
-      const camada = L.geoJSON(geojson, {
-        // Linha da trilha: usa a cor do KML, ou vermelho se não houver
-        style: f => ({
-          color: f.properties.stroke || "#e63946",
-          weight: f.properties["stroke-width"] || 4
-        }),
+    fetch(kmlUrl)
+      .then(r => {
+        if (!r.ok) throw new Error("Erro HTTP " + r.status);
+        return r.text();
+      })
+      .then(texto => {
+        const kml = new DOMParser().parseFromString(texto, "text/xml");
+        const geojson = toGeoJSON.kml(kml);
 
-        // Pontos das fotos: bolinhas clicáveis
-        pointToLayer: (f, latlng) => L.circleMarker(latlng, {
-          radius: 6,
-          color: "#ffffff",
-          weight: 2,
-          fillColor: "#1d70b8",
-          fillOpacity: 1
-        }),
+        let totalFotos = 0;
 
-        onEachFeature: (f, layer) => {
-          const p = f.properties || {};
-          const desc = textoDescricao(p.description);
+        const camada = L.geoJSON(geojson, {
+          style: f => ({
+            color: f.properties.stroke || "#e63946",
+            weight: f.properties["stroke-width"] || 4
+          }),
 
-          if (desc) {
-            layer.bindPopup(desc);  // mostra o link "Ver foto 360"
-          } else if (p.name) {
-            layer.bindPopup(`<b>${p.name}</b>`);
+          pointToLayer: (f, latlng) => {
+            totalFotos++;
+            return L.circleMarker(latlng, {
+              radius: 6,
+              color: "#ffffff",
+              weight: 2,
+              fillColor: "#1d70b8",
+              fillOpacity: 1
+            });
+          },
+
+          onEachFeature: (f, layer) => {
+            const p = f.properties || {};
+            const desc = textoDescricao(p.description);
+
+            if (desc) {
+              layer.bindPopup(desc);
+            } else if (p.name) {
+              layer.bindPopup(`<b>${p.name}</b>`);
+            }
+            if (p.name) layer.bindTooltip(p.name);
           }
-          if (p.name) layer.bindTooltip(p.name);
-        }
-      }).addTo(map);
+        }).addTo(map);
 
-      if (camada.getLayers().length) {
-        map.fitBounds(camada.getBounds());
-      }
-      status.textContent = `${geojson.features.length} feições carregadas.`;
-    })
-    .catch(err => {
-      console.error(err);
-      status.textContent = "Falha ao carregar KML: " + err.message;
-    });
-</script>
+        if (camada.getLayers().length) {
+        map.fitBounds(camada.getBounds(), { paddingTopLeft: [20, 100], paddingBottomRight: [20, 20] });
+        map.setZoom(map.getZoom() + 1);  // +1 nível de zoom ao abrir
+        }
+        status.textContent = totalFotos
+          ? `${totalFotos} fotos 360° · clique nos pontos`
+          : `${geojson.features.length} feições carregadas`;
+      })
+      .catch(err => {
+        console.error(err);
+        status.textContent = "Falha ao carregar o mapa: " + err.message;
+      });
+  </script>
 </body>
 </html>
