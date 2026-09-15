@@ -1,5 +1,8 @@
 from django.shortcuts import render, get_object_or_404
 from galeria.models import Fotografia, Categoria, Album
+from django.db.models import IntegerField
+from django.db.models.functions import Cast
+
 
 def index(request):
     #fotografias = Fotografia.objects.order_by("categoria").filter(publicada=True)
@@ -22,7 +25,11 @@ def projeto(request, categoria_id):
 
 def album(request, album_id):
     album = get_object_or_404(Album, pk=album_id)
-    fotografias = Fotografia.objects.order_by("nome").filter(album=album_id, publicada=True)
+    fotografias = (
+    Fotografia.objects
+    .filter(album=album_id, publicada=True)
+    .order_by(Cast("nome", IntegerField()))
+    )
     return render(request,'galeria/album.html', {"fotografias":fotografias,"album": album})
 
 def fotoAlbum360(request, nome, album_slug):
