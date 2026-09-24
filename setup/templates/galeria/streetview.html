@@ -1,67 +1,135 @@
 {% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
   <meta charset="utf-8">
-  <title>Tour 360 - {{album.title}}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tour 360 - {{ album.title }}</title>
+
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core@5/index.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/gallery-plugin@5/index.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/virtual-tour-plugin@5/index.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/markers-plugin@5/index.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
   <style>
-        body{
-            margin: 0px;
+    body { margin: 0; }
+    #viewer { width: 100vw; height: 100vh; }
+
+    /* ----- Aviso do teclado ----- */
+    .aviso-teclado {
+      position: fixed;
+      bottom: 70px;
+      right: 16px;
+      z-index: 90;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: rgba(0, 0, 0, 0.6);
+      color: #fff;
+      font-family: system-ui, sans-serif;
+      font-size: 0.82rem;
+      border-radius: 10px;
+      backdrop-filter: blur(4px);
+      pointer-events: none;
+      transition: opacity 0.6s;
+    }
+    .aviso-teclado kbd {
+      display: inline-block;
+      padding: 2px 7px;
+      background: #fff;
+      color: #222;
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.9em;
+      font-weight: 600;
+    }
+    .aviso-teclado.sumindo { opacity: 0; }
+
+    /* ----- Minimapa ----- */
+    #minimapa {
+      position: fixed;
+      bottom: 70px;
+      left: 16px;
+      width: 280px;
+      height: 200px;
+      z-index: 95;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid #fff;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      transition: width 0.25s, height 0.25s;
+    }
+    #minimapa.grande { width: 460px; height: 340px; }
+
+    #btn-minimapa {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      z-index: 500;
+      width: 26px;
+      height: 26px;
+      border: none;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.9);
+      cursor: pointer;
+      font-weight: 700;
     }
 
-    #viewer { width: 100%; height: 600px; }
+    @media (max-width: 600px) {
+      .aviso-teclado { display: none; }
+      #minimapa { width: 150px; height: 110px; bottom: 60px; left: 10px; }
+      #minimapa.grande { width: calc(100% - 20px); height: 50vh; }
+    }
   </style>
 </head>
 <body>
-  <div id="viewer" style="width: 100vw; height: 100vh;"></div>
+  <div id="viewer"></div>
+
+  <div class="aviso-teclado" id="aviso-teclado">
+    <kbd>↑</kbd> avançar <kbd>↓</kbd> voltar
+  </div>
+
+  {% if kml_url %}
+    <div id="minimapa">
+      <button id="btn-minimapa" title="Ampliar/reduzir">⤢</button>
+    </div>
+    {{ kml_url|json_script:"kml-url" }}
+  {% endif %}
+
   <script src="https://cdn.jsdelivr.net/npm/three@0.152.0/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core@5/index.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/markers-plugin@5/index.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/gallery-plugin@5/index.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/virtual-tour-plugin@5/index.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/@tmcw/togeojson@5.8.1/dist/togeojson.umd.js"></script>
+
   <script>
-
     {% if inverterSentidoStreetView %}
-
-      const sentido_frente = {{defaultYawInteger}};
-      const sentido_voltar = parseInt({{defaultYawInteger}}, 10) * -1;
-
+      const sentido_frente = {{ defaultYawInteger }};
+      const sentido_voltar = parseInt({{ defaultYawInteger }}, 10) * -1;
     {% else %}
-      const sentido_frente = parseInt({{defaultYawInteger}}, 10) * -1;
-      const sentido_voltar = parseInt({{defaultYawInteger}}, 10);
+      const sentido_frente = parseInt({{ defaultYawInteger }}, 10) * -1;
+      const sentido_voltar = parseInt({{ defaultYawInteger }}, 10);
     {% endif %}
 
-    console.log("sentido voltar",sentido_voltar);
     const nodes = [
       {% for foto in fotos %}
         {
           id: 'node-{{ forloop.counter }}',
           panorama: '{{ foto.foto.url }}',
-          caption: '{{album.title}}:Foto-{{ foto.nome }}',
-          sphereCorrection: {
-            pan: '{{pan}}',          
-            tilt: '{{tilt}}',          
-            roll: '{{roll}}'                
-          },
+          caption: '{{ album.title }}:Foto-{{ foto.nome }}',
+          sphereCorrection: { pan: '{{ pan }}', tilt: '{{ tilt }}', roll: '{{ roll }}' },
           links: [
             {% if not forloop.last %}
-              { nodeId: 'node-{{ forloop.counter|add:1 }}',
-                position: {yaw: sentido_frente, pitch:0},
-               },
+              { nodeId: 'node-{{ forloop.counter|add:1 }}', position: { yaw: sentido_frente, pitch: 0 } },
             {% endif %}
-            
             {% if not forloop.first %}
-               { nodeId: 'node-{{ forloop.counter|add:-1 }}',
-                position: {yaw: sentido_voltar, pitch:0},
-               },
+              { nodeId: 'node-{{ forloop.counter|add:-1 }}', position: { yaw: sentido_voltar, pitch: 0 } },
             {% endif %}
-
           ]
-
         }{% if not forloop.last %},{% endif %}
       {% endfor %}
     ];
@@ -70,10 +138,17 @@
       container: document.getElementById('viewer'),
       loadingImg: 'https://photo-sphere-viewer-data.netlify.app/assets/loader.gif',
       touchmoveTwoFingers: true,
-      mousewheelCtrlKey: true,
+      mousewheelCtrlKey: false,
       defaultZoomLvl: 0,
       defaultYaw: '30deg',
       navbar: 'zoom move gallery caption fullscreen',
+      keyboard: 'always',
+      keyboardActions: {
+        ArrowLeft: 'ROTATE_LEFT',
+        ArrowRight: 'ROTATE_RIGHT',
+        PageUp: 'ZOOM_IN',
+        PageDown: 'ZOOM_OUT',
+      },
       plugins: [
         [PhotoSphereViewer.MarkersPlugin],
         [PhotoSphereViewer.GalleryPlugin, { thumbnailSize: { width: 100, height: 100 } }],
@@ -81,10 +156,113 @@
           positionMode: 'manual',
           renderMode: '3d',
           nodes: nodes,
-          startNodeId: 'node-1',
+          startNodeId: 'node-{{ start_node }}',
         }],
       ],
     });
+
+    // ----- Navegação pelo teclado -----
+    const tour = viewer.getPlugin(PhotoSphereViewer.VirtualTourPlugin);
+    const totalNodes = {{ fotos|length }};
+    let nodeAtual = {{ start_node }};
+
+    tour.addEventListener('node-changed', e => {
+      nodeAtual = parseInt(e.node.id.replace('node-', ''), 10);
+    });
+
+    function irParaNode(n) {
+      if (n >= 1 && n <= totalNodes) {
+        tour.setCurrentNode('node-' + n);
+      }
+    }
+
+    window.addEventListener('keydown', e => {
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        irParaNode(nodeAtual + 1);
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        irParaNode(nodeAtual - 1);
+      }
+    });
+
+    // Esconde o aviso após 6 segundos
+    const aviso = document.getElementById("aviso-teclado");
+    setTimeout(() => {
+      aviso.classList.add("sumindo");
+      setTimeout(() => aviso.remove(), 700);
+    }, 6000);
+
+    // ----- Minimapa -----
+    {% if kml_url %}
+    (function () {
+      const kmlUrl = JSON.parse(document.getElementById("kml-url").textContent);
+      const caixa = document.getElementById("minimapa");
+
+      const mini = L.map(caixa, {
+        zoomControl: false, attributionControl: false,
+        dragging: false, scrollWheelZoom: false, doubleClickZoom: false
+      }).setView([-25.43, -48.92], 14);
+
+      L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19, referrerPolicy: "strict-origin-when-cross-origin"
+      }).addTo(mini);
+
+      const atual = L.circleMarker([0, 0], {
+        radius: 7, color: "#fff", weight: 3, fillColor: "#e63946", fillOpacity: 1
+      });
+
+      let pontos = [];   // coordenadas das fotos, na ordem do KML
+
+      fetch(kmlUrl)
+        .then(r => r.text())
+        .then(txt => {
+          const geo = toGeoJSON.kml(new DOMParser().parseFromString(txt, "text/xml"));
+
+          const camada = L.geoJSON(geo, {
+            style: { color: "#1d70b8", weight: 4 },
+            pointToLayer: (f, latlng) => {
+              pontos.push(latlng);
+              return L.circleMarker(latlng, {
+                radius: 3, color: "#1d70b8", weight: 1,
+                fillColor: "#1d70b8", fillOpacity: 0.7
+              });
+            },
+            onEachFeature: (f, layer) => {
+              if (f.geometry.type === "Point") {
+                const i = pontos.length;   // índice deste ponto
+                layer.on("click", () => irParaNode(i));
+              }
+            }
+          }).addTo(mini);
+
+          mini.fitBounds(camada.getBounds(), { padding: [10, 10] });
+          atual.addTo(mini);
+          marcarPosicao(nodeAtual);
+        })
+        .catch(err => console.error("Minimapa:", err));
+
+      function marcarPosicao(n) {
+        const p = pontos[n - 1];   // node-1 é o ponto de índice 0
+        if (!p) return;
+        atual.setLatLng(p);
+        if (!mini.getBounds().pad(-0.15).contains(p)) mini.panTo(p);
+      }
+
+      tour.addEventListener("node-changed", e => {
+        marcarPosicao(parseInt(e.node.id.replace("node-", ""), 10));
+      });
+
+      document.getElementById("btn-minimapa").addEventListener("click", ev => {
+        ev.stopPropagation();
+        caixa.classList.toggle("grande");
+        const aberto = caixa.classList.contains("grande");
+        mini.dragging[aberto ? "enable" : "disable"]();
+        mini.scrollWheelZoom[aberto ? "enable" : "disable"]();
+        setTimeout(() => mini.invalidateSize(), 260);
+      });
+    })();
+    {% endif %}
   </script>
 </body>
 </html>

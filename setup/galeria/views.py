@@ -53,7 +53,22 @@ def streetView(request, album_id):
     defaultYawInteger = int(defaultYaw.replace('deg', ''))
     fotos = Fotografia.objects.filter(album=album.id).order_by('id')
     inverterSentidoStreetView = album.inverterSentidoStreetView
-    return render(request, 'galeria/streetview.html', {"album":album,"fotos":fotos, "defaultYaw":defaultYaw,"defaultYawInteger":defaultYawInteger, "defaultPitch":defaultPitch, "pan":pan, "tilt":tilt, "roll": roll, "inverterSentidoStreetView":inverterSentidoStreetView})
+    # ?foto=12 vem do mapa. Os nodes começam em 1, o índice do KML começa em 0.
+    try:
+        indice = int(request.GET.get("foto", 0))
+    except ValueError:
+        indice = 0
+    total = fotos.count()
+    start_node = max(1, min(indice + 1, total)) if total else 1
+
+    return render(request, 'galeria/streetview.html', {
+        "album": album, "fotos": fotos, "defaultYaw": defaultYaw,
+        "defaultYawInteger": defaultYawInteger, "defaultPitch": defaultPitch,
+        "pan": pan, "tilt": tilt, "roll": roll,
+        "inverterSentidoStreetView": inverterSentidoStreetView,
+        "start_node": start_node,
+        "kml_url": album.arquivo_kml.url if album.arquivo_kml else "",
+    })
 
 def mapa(request, pk):
     album = get_object_or_404(Album, pk=pk)
