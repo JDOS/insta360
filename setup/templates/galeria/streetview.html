@@ -19,8 +19,8 @@
     /* ----- Aviso do teclado ----- */
     .aviso-teclado {
       position: fixed;
-      bottom: 70px;
-      right: 16px;
+      bottom: 280px;   /* 70 (base do minimapa) + 200 (altura) + 10 de folga */
+      left: 16px;      /* alinhado com o minimapa */
       z-index: 90;
       display: flex;
       align-items: center;
@@ -34,6 +34,7 @@
       backdrop-filter: blur(4px);
       pointer-events: none;
       transition: opacity 0.6s;
+      width: fit-content;   /* não estica além do texto */
     }
     .aviso-teclado kbd {
       display: inline-block;
