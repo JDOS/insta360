@@ -20,7 +20,7 @@ def imagem360(request, foto_id):
 
 def projeto(request, categoria_id):
     categoria = Categoria.objects.get(pk=categoria_id)
-    fotografias = Fotografia.objects.order_by("nome").filter(categoria_id=categoria_id, publicada=True)
+    fotografias = Fotografia.objects.filter(categoria_id=categoria_id, publicada=True).order_by(categoria.ordenar_fotos_por)
     albuns = Album.objects.order_by("title").filter(categoria_id=categoria_id)
     return render(request,'galeria/projeto.html', {"fotografias":fotografias,"categoria": categoria, "albuns":albuns})
 

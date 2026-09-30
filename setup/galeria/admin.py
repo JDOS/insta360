@@ -20,7 +20,7 @@ class CategoriaAdmin(admin.ModelAdmin):
 class FotografiaAdmin(admin.ModelAdmin):
     list_display = ("nome", "categoria", "criado_em", "album")
     list_filter = ("categoria",)
-    search_fields = ("nome",)
+    search_fields = ("nome","categoria__nome",)
     autocomplete_fields = ("categoria",)
     ordering = ("categoria__nome", "nome")
 

@@ -57,13 +57,24 @@
                       
                 {%for fotografia in fotografias %}
                     <div class="card" style="width: 18rem;">
-                        <img src="{{fotografia.foto.url}}" class="card-img-top" alt="...">
-                            <div class="card-body">
-                                <h5 class="card-title">{{fotografia.nome}}</h5>
-                                <p class="card-text">{{fotografia.descricao}}</p>
-                                <a href="{% url 'imagem360' fotografia.id %}" class="btn btn-primary">Visualizar</a>
-                                <a href="{% url 'imagem360Animacao' fotografia.id %}" class="btn btn-primary">Animacao</a>
-                            </div>
+                        {% if fotografia.foto %}
+                        <img src="{{ fotografia.foto.url }}" class="card-img-top" alt="{{ fotografia.nome }}">
+                        {% endif %}
+
+                        {% if categoria.mostrar_data %}
+                        <span class="position-absolute top-0 end-0 m-2 badge bg-dark bg-opacity-75" style="font-size: 0.7rem;">
+                            {{ fotografia.data_fotografia|date:"d/m/Y" }}
+                        </span>
+                        {% endif %}
+
+                        <div class="card-body">
+                            <h5 class="card-title">{{ fotografia.nome }}</h5>
+                            <p class="card-text">{{ fotografia.descricao }}</p>
+                            {% if fotografia.foto %}
+                            <a href="{% url 'imagem360' fotografia.id %}" class="btn btn-primary">Visualizar</a>
+                            <a href="{% url 'imagem360Animacao' fotografia.id %}" class="btn btn-primary">Animacao</a>
+                            {% endif %}
+                        </div>
                     </div>
                 {% endfor %}
 

@@ -10,6 +10,23 @@ class Categoria(models.Model):
     foto = models.ImageField(upload_to="fotos/%Y/%m/%d/", blank=True)
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
+    ORDENAR_CHOICES = [
+        ("nome", "Nome"),
+        ("-data_fotografia", "Data Decrescente"),
+        ("data_fotografia", "Data Crescente"),
+    ]
+
+    mostrar_data = models.BooleanField(
+        default=False,
+        verbose_name="Mostrar data das fotos",
+    )
+
+    ordenar_fotos_por = models.CharField(
+        max_length=30,
+        choices=ORDENAR_CHOICES,
+        default="nome",
+        verbose_name="Ordenar fotos por",
+    )
 
     class Meta:
         ordering = ["nome"]
