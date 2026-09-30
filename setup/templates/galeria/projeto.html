@@ -86,7 +86,9 @@
                             <div class="card-body">
                                 <h5 class="card-title">{{album.title}}</h5>
                                 <p class="card-text"></p>
+                                {% if user.is_authenticated %}
                                 <a href="{% url 'album' album.id %}" class="btn btn-primary">Álbum</a>
+                                {% endif %}
                                 <a href="{% url 'streetView' album.id %}" class="btn btn-primary">Street View</a>
                                 {% if album.arquivo_kml %}
                                 <a href="{% url 'mapa' album.pk %}" class="btn btn-primary">Mapa</a>
