@@ -1,13 +1,14 @@
 import os
+
 from django.core.management.base import BaseCommand, CommandError
 from PIL import Image
-from galeria.models import Album, Fotografia
 
-Image.MAX_IMAGE_PIXELS = None  # panoramas grandes passam do limite padrão
+from galeria.models import Album, Fotografia
+from galeria.utils import extrair_gps, reduzir_imagem
 
 
 class Command(BaseCommand):
-    help = "Reduz o tamanho dos panoramas de um álbum."
+    help = "Reduz o tamanho dos panoramas de um álbum, preservando o EXIF (GPS)."
 
     def add_arguments(self, parser):
         parser.add_argument("album_id", type=int, help="ID do álbum")
@@ -26,35 +27,67 @@ class Command(BaseCommand):
         self.stdout.write(f"Álbum: {album.title} — {fotos.count()} fotos")
 
         largura = opts["largura"]
+        qualidade = opts["qualidade"]
+        dry_run = opts["dry_run"]
+
         total_antes = total_depois = 0
+        reduzidas = puladas = 0
 
         for f in fotos:
             if not f.foto:
                 continue
+
             caminho = f.foto.path
+            if not os.path.exists(caminho):
+                self.stdout.write(self.style.WARNING(f"  faltando {f.id}: {caminho}"))
+                continue
+
             antes = os.path.getsize(caminho)
             total_antes += antes
 
-            if opts["dry_run"]:
-                self.stdout.write(f"  [dry] {os.path.basename(caminho)} — {antes/1e6:.1f} MB")
+            with Image.open(caminho) as img:
+                largura_atual = img.width
+
+            # Já está no tamanho certo: não recomprime (cada recompressão perde qualidade)
+            if largura_atual <= largura:
+                total_depois += antes
+                puladas += 1
+                self.stdout.write(f"  pulada {f.id}: já tem {largura_atual}px")
                 continue
 
-            img = Image.open(caminho)
-            if img.mode != "RGB":
-                img = img.convert("RGB")
-            if img.width > largura:
-                img = img.resize((largura, largura // 2), Image.LANCZOS)
+            if dry_run:
+                reduzidas += 1
+                self.stdout.write(
+                    f"  [dry] {f.id}: {largura_atual}px, {antes/1e6:.1f} MB → seria reduzida"
+                )
+                continue
 
-            img.save(caminho, "JPEG", quality=opts["qualidade"],
-                     optimize=True, progressive=True)
+            with open(caminho, "rb") as arq:
+                # Aproveita para preencher o GPS de fotos antigas que ainda não têm
+                if f.latitude is None:
+                    lat, lon = extrair_gps(arq)
+                    if lat is not None:
+                        Fotografia.objects.filter(pk=f.pk).update(latitude=lat, longitude=lon)
+
+                reduzida = reduzir_imagem(arq, largura, qualidade)
+
+            # Grava num arquivo temporário e só depois substitui o original
+            temporario = caminho + ".tmp"
+            with open(temporario, "wb") as arq:
+                arq.write(reduzida.read())
+            os.replace(temporario, caminho)
 
             depois = os.path.getsize(caminho)
             total_depois += depois
-            self.stdout.write(
-                f"  ok {f.id}: {antes/1e6:.1f} MB → {depois/1e6:.1f} MB"
-            )
+            reduzidas += 1
+            self.stdout.write(f"  ok {f.id}: {antes/1e6:.1f} MB → {depois/1e6:.1f} MB")
 
-        if not opts["dry_run"] and total_antes:
+        if dry_run:
             self.stdout.write(self.style.SUCCESS(
+                f"{reduzidas} foto(s) seriam reduzidas, {puladas} já estão no tamanho."
+            ))
+        elif total_antes:
+            self.stdout.write(self.style.SUCCESS(
+                f"{reduzidas} reduzida(s), {puladas} pulada(s). "
                 f"Total: {total_antes/1e6:.0f} MB → {total_depois/1e6:.0f} MB"
             ))

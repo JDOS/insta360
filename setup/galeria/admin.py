@@ -10,6 +10,9 @@ from django.db.models import IntegerField
 from django.db.models.functions import Cast
 from django.utils.html import format_html
 
+from .utils import extrair_gps, reduzir_imagem
+
+
 @admin.register(Categoria)
 class CategoriaAdmin(admin.ModelAdmin):
     list_display = ("nome", "slug")
@@ -95,37 +98,7 @@ class AlbumAdmin(admin.ModelAdmin):
     
     def bulk_upload_view(self, request, object_id):
         album = get_object_or_404(Album, pk=object_id)
-        
-        if request.method == 'POST':
-            # Pegar TODOS os arquivos
-            images = request.FILES.getlist('images')
-            
-            if not images:
-                messages.error(request, '❌ Nenhuma imagem foi enviada!')
-                return render(request, 'admin/galeria/album/bulk_upload.html', {
-                    **self.admin_site.each_context(request),
-                    'opts': self.model._meta,
-                    'original': album,
-                    'title': f'Upload múltiplo - {album.title}',
-                    'album': album,
-                })
 
-            ultima_foto = Fotografia.objects.filter(album=object_id).order_by('-id').first()
-            if ultima_foto:
-                ultimo_nome = int(ultima_foto.nome) + 1
-            else:
-                ultimo_nome=0
-
-            # ORDENAR por nome (ordem crescente)
-            images_sorted = sorted(images, key=lambda x: x.name)
-            # Criar fotos sem validação complexa (para testar)
-            photos = [Fotografia(album=album, foto=img, nome=str(ultimo_nome+index)) for index,img in enumerate(images_sorted)]
-            
-            Fotografia.objects.bulk_create(photos)
-            
-            messages.success(request, f'✅ {len(images)} foto(s) adicionada(s) com sucesso!')
-            return redirect('admin:galeria_album_change', object_id=album.pk)
-        
         context = {
             **self.admin_site.each_context(request),
             'opts': self.model._meta,
@@ -133,6 +106,42 @@ class AlbumAdmin(admin.ModelAdmin):
             'title': f'Upload múltiplo - {album.title}',
             'album': album,
         }
+
+        if request.method == 'POST':
+            images = request.FILES.getlist('images')
+
+            if not images:
+                messages.error(request, '❌ Nenhuma imagem foi enviada!')
+                return render(request, 'admin/galeria/album/bulk_upload.html', context)
+
+            # Nomes são sequenciais a partir de 0, então o próximo é a quantidade atual
+            ultimo_nome = Fotografia.objects.filter(album=album).count()
+
+            images_sorted = sorted(images, key=lambda x: x.name)
+
+            photos = []
+            sem_gps = 0
+            for index, img in enumerate(images_sorted):
+                latitude, longitude = extrair_gps(img)  # antes de reduzir
+                if latitude is None:
+                    sem_gps += 1
+
+                photos.append(Fotografia(
+                    album=album,
+                    foto=reduzir_imagem(img),
+                    nome=str(ultimo_nome + index),
+                    latitude=latitude,
+                    longitude=longitude,
+                ))
+
+            Fotografia.objects.bulk_create(photos)
+
+            messages.success(request, f'✅ {len(photos)} foto(s) adicionada(s) com sucesso!')
+            if sem_gps:
+                messages.warning(request, f'⚠️ {sem_gps} foto(s) sem localização GPS.')
+
+            return redirect('admin:galeria_album_change', object_id=album.pk)
+
         return render(request, 'admin/galeria/album/bulk_upload.html', context)
     
     def change_view(self, request, object_id, form_url='', extra_context=None):

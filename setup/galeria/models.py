@@ -126,6 +126,9 @@ class Fotografia(models.Model):
     data_fotografia = models.DateTimeField(default=datetime.now, blank=False)
     criado_em = models.DateTimeField(auto_now_add=True)
 
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+
     class Meta:
         ordering = ["categoria__nome", "nome"]
         verbose_name = "Fotografia"
@@ -133,3 +136,11 @@ class Fotografia(models.Model):
 
     def __str__(self):
         return self.nome
+
+    def save(self, *args, **kwargs):
+        if self.foto and not self.foto._committed:
+            from .utils import extrair_gps, reduzir_imagem
+            if self.latitude is None:
+                self.latitude, self.longitude = extrair_gps(self.foto.file)
+            self.foto = reduzir_imagem(self.foto.file)
+        super().save(*args, **kwargs)
