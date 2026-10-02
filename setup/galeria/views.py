@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from galeria.models import Fotografia, Categoria, Album
 from django.db.models import IntegerField
 from django.db.models.functions import Cast
@@ -18,10 +18,15 @@ def imagem360(request, foto_id):
     fotografia = get_object_or_404(Fotografia, pk=foto_id)
     return render(request, 'galeria/view360.html', {"fotografia":fotografia})
 
-def projeto(request, categoria_id):
-    categoria = Categoria.objects.get(pk=categoria_id)
-    fotografias = Fotografia.objects.filter(categoria_id=categoria_id, publicada=True).order_by(categoria.ordenar_fotos_por)
-    albuns = Album.objects.order_by("title").filter(categoria_id=categoria_id)
+def projeto_por_id(request, categoria_id):
+    categoria = get_object_or_404(Categoria, pk=categoria_id)
+    return redirect('projeto', categoria_slug=categoria.slug, permanent=True)
+
+
+def projeto(request, categoria_slug):
+    categoria = get_object_or_404(Categoria, slug=categoria_slug)
+    fotografias = Fotografia.objects.filter(categoria_id=categoria.id, publicada=True).order_by(categoria.ordenar_fotos_por)
+    albuns = Album.objects.order_by("title").filter(categoria_id=categoria.id)
     return render(request,'galeria/projeto.html', {"fotografias":fotografias,"categoria": categoria, "albuns":albuns})
 
 def album(request, album_id):

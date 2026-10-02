@@ -8,6 +8,7 @@ from django.utils.html import format_html
 
 from django.db.models import IntegerField
 from django.db.models.functions import Cast
+from django.utils.html import format_html
 
 @admin.register(Categoria)
 class CategoriaAdmin(admin.ModelAdmin):
@@ -20,14 +21,40 @@ class CategoriaAdmin(admin.ModelAdmin):
 class FotografiaAdmin(admin.ModelAdmin):
     list_display = ("nome", "categoria", "criado_em", "album")
     list_filter = ("categoria",)
-    search_fields = ("nome","categoria__nome",)
-    autocomplete_fields = ("categoria",)
+    search_fields = ("nome", "categoria__nome")
+    autocomplete_fields = ("categoria", "album")
     ordering = ("categoria__nome", "nome")
+    readonly_fields = ("image_preview", "criado_em")
 
+    fieldsets = (
+        ("Identificação", {
+            "fields": (("nome",), "categoria", "album"),
+        }),
+        ("Imagem", {
+            "fields": ("image_preview", "foto"),
+        }),
+        ("Textos", {
+            "fields": ("legenda", "descricao"),
+        }),
+        ("Publicação", {
+            "fields": (("publicada", "data_fotografia"),),
+        }),
+        ("Informações do sistema", {
+            "fields": ("criado_em",),
+            "classes": ("collapse",),
+        }),
+    )
+
+    @admin.display(description="Preview")
+    def image_preview(self, obj):
+        if obj and obj.foto:
+            return format_html('<img src="{}" style="max-height: 300px;" />', obj.foto.url)
+        return "-"
 
 class PhotoInline(admin.TabularInline):
     model = Fotografia
     extra = 0
+    show_change_link = True
     readonly_fields = ('image_preview',)
     fields = ('foto',)
     

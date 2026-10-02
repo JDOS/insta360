@@ -18,7 +18,7 @@ class Categoria(models.Model):
 
     mostrar_data = models.BooleanField(
         default=False,
-        verbose_name="Mostrar data das fotos",
+        verbose_name="Mostrar data nas fotos",
     )
 
     ordenar_fotos_por = models.CharField(
@@ -111,7 +111,7 @@ class Album(models.Model):
 
 
 class Fotografia(models.Model):
-    album = models.ForeignKey(Album, related_name='photos', on_delete=models.CASCADE, null=True, blank=True, verbose_name='Álbum')
+    album = models.ForeignKey(Album, related_name='photos', on_delete=models.CASCADE, null=True, blank=True, verbose_name="Álbum 360")
     nome = models.CharField(max_length=100, null=False, blank=False)
     legenda = models.CharField(max_length=150, null=True, blank=True)
     descricao = models.TextField(null=True, blank=True)
