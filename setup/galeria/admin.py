@@ -12,6 +12,7 @@ from django.utils.html import format_html
 
 from .utils import extrair_gps, reduzir_imagem
 
+from .kml import salvar_kml
 
 @admin.register(Categoria)
 class CategoriaAdmin(admin.ModelAdmin):
@@ -40,7 +41,7 @@ class FotografiaAdmin(admin.ModelAdmin):
             "fields": ("legenda", "descricao"),
         }),
         ("Publicação", {
-            "fields": (("publicada", "data_fotografia"),),
+            "fields": (("publicada", "data_fotografia"),"latitude","longitude"),
         }),
         ("Informações do sistema", {
             "fields": ("criado_em",),
@@ -80,7 +81,28 @@ class AlbumAdmin(admin.ModelAdmin):
     list_display_links = ('title',)
     search_fields = ('title',)
     inlines = [PhotoInline]
-    
+    actions = ["gerar_kml"]
+
+
+    @admin.action(description="Gerar arquivo KML das fotos")
+    def gerar_kml(self, request, queryset):
+        for album in queryset:
+            pontos = salvar_kml(album, request)
+            sem_coord = album.photos.filter(latitude__isnull=True).count()
+
+            if not pontos:
+                self.message_user(
+                    request,
+                    f"“{album.title}”: nenhuma foto com latitude e longitude. KML não gerado.",
+                    messages.WARNING,
+                )
+                continue
+
+            texto = f"“{album.title}”: KML gerado com {pontos} ponto(s)."
+            if sem_coord:
+                texto += f" {sem_coord} foto(s) sem coordenadas ficaram de fora."
+            self.message_user(request, texto, messages.SUCCESS)
+
     def photo_count(self, obj):
         return obj.photos.count()
     photo_count.short_description = 'Nº Fotos'

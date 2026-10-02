@@ -137,10 +137,11 @@ class Fotografia(models.Model):
     def __str__(self):
         return self.nome
 
+#compactação apenas no multiplo upload
     def save(self, *args, **kwargs):
         if self.foto and not self.foto._committed:
             from .utils import extrair_gps, reduzir_imagem
             if self.latitude is None:
                 self.latitude, self.longitude = extrair_gps(self.foto.file)
-            self.foto = reduzir_imagem(self.foto.file)
+           # self.foto = reduzir_imagem(self.foto.file)
         super().save(*args, **kwargs)

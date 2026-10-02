@@ -92,12 +92,15 @@
     <kbd>↑</kbd> avançar <kbd>↓</kbd> voltar
   </div>
 
-  {% if kml_url %}
+  {% if tem_mapa %}
     <div id="minimapa">
       <button id="btn-minimapa" title="Ampliar/reduzir">⤢</button>
     </div>
-    {{ kml_url|json_script:"kml-url" }}
   {% endif %}
+
+  {# Dados passados com segurança para o JavaScript (aspas e apóstrofos não quebram o script) #}
+  {{ dados_fotos|json_script:"dados-fotos" }}
+  {{ album.title|json_script:"titulo-album" }}
 
   <script src="https://cdn.jsdelivr.net/npm/three@0.152.0/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core@5/index.min.js"></script>
@@ -105,7 +108,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/gallery-plugin@5/index.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/virtual-tour-plugin@5/index.min.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/@tmcw/togeojson@5.8.1/dist/togeojson.umd.js"></script>
 
   <script>
     {% if inverterSentidoStreetView %}
@@ -116,24 +118,40 @@
       const sentido_voltar = parseInt({{ defaultYawInteger }}, 10);
     {% endif %}
 
-    const nodes = [
-      {% for foto in fotos %}
-        {
-          id: 'node-{{ forloop.counter }}',
-          panorama: '{{ foto.foto.url }}',
-          caption: '{{ album.title }}:Foto-{{ foto.nome }}',
-          sphereCorrection: { pan: '{{ pan }}', tilt: '{{ tilt }}', roll: '{{ roll }}' },
-          links: [
-            {% if not forloop.last %}
-              { nodeId: 'node-{{ forloop.counter|add:1 }}', position: { yaw: sentido_frente, pitch: 0 } },
-            {% endif %}
-            {% if not forloop.first %}
-              { nodeId: 'node-{{ forloop.counter|add:-1 }}', position: { yaw: sentido_voltar, pitch: 0 } },
-            {% endif %}
-          ]
-        }{% if not forloop.last %},{% endif %}
-      {% endfor %}
-    ];
+    // ----- Dados das fotos (mesma ordem dos nós do tour) -----
+    const fotos = JSON.parse(document.getElementById('dados-fotos').textContent);
+    const tituloAlbum = JSON.parse(document.getElementById('titulo-album').textContent);
+    const correcao = { pan: '{{ pan }}', tilt: '{{ tilt }}', roll: '{{ roll }}' };
+
+    //descrição foto
+    function legenda(f) {
+      const texto = tituloAlbum + ':Foto-' + f.nome;
+      if (f.lat == null || f.lon == null) {
+        return texto + ' (sem localização)';
+      }
+      return texto + ' (' + f.lat.toFixed(6) + ', ' + f.lon.toFixed(6) + ')';
+    }
+    // ----- Nós do tour: cada foto liga à próxima e à anterior -----
+    const nodes = fotos.map((f, i) => {
+      const n = i + 1;
+      const links = [];
+      if (n < fotos.length) {
+        links.push({ nodeId: 'node-' + (n + 1), position: { yaw: sentido_frente, pitch: 0 } });
+      }
+      if (n > 1) {
+        links.push({ nodeId: 'node-' + (n - 1), position: { yaw: sentido_voltar, pitch: 0 } });
+      }
+      return {
+        id: 'node-' + n,
+        panorama: f.url,
+        caption: legenda(f),
+        sphereCorrection: correcao,
+        links: links,
+      };
+    });
+
+    // Zoom escolhido pelo usuário; é mantido ao trocar de foto
+    let zoomGuardado = 0;
 
     const viewer = new PhotoSphereViewer.Viewer({
       container: document.getElementById('viewer'),
@@ -158,17 +176,35 @@
           renderMode: '3d',
           nodes: nodes,
           startNodeId: 'node-{{ start_node }}',
+          // Mantém o zoom atual durante a transição entre fotos
+          transitionOptions: () => ({
+            showLoader: true,
+            effect: 'fade',
+            rotation: true,
+            zoomTo: zoomGuardado,
+          }),
         }],
       ],
     });
 
+    // ----- Controle do zoom -----
+    viewer.addEventListener('zoom-updated', e => {
+      zoomGuardado = e.zoomLevel;
+    });
+
     // ----- Navegação pelo teclado -----
     const tour = viewer.getPlugin(PhotoSphereViewer.VirtualTourPlugin);
-    const totalNodes = {{ fotos|length }};
+    const totalNodes = fotos.length;
     let nodeAtual = {{ start_node }};
 
     tour.addEventListener('node-changed', e => {
       nodeAtual = parseInt(e.node.id.replace('node-', ''), 10);
+
+      // Garantia: se a transição alterou o zoom, volta para o que o usuário usava
+      const zoomDesejado = zoomGuardado;
+      if (Math.abs(viewer.getZoomLevel() - zoomDesejado) > 0.5) {
+        viewer.zoom(zoomDesejado);
+      }
     });
 
     function irParaNode(n) {
@@ -195,60 +231,58 @@
     }, 6000);
 
     // ----- Minimapa -----
-    {% if kml_url %}
+    {% if tem_mapa %}
     (function () {
-      const kmlUrl = JSON.parse(document.getElementById("kml-url").textContent);
       const caixa = document.getElementById("minimapa");
 
       const mini = L.map(caixa, {
         zoomControl: false, attributionControl: false,
         dragging: false, scrollWheelZoom: false, doubleClickZoom: false
-      }).setView([-25.43, -48.92], 14);
+      });
 
       L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19, referrerPolicy: "strict-origin-when-cross-origin"
       }).addTo(mini);
 
-      const atual = L.circleMarker([0, 0], {
-        radius: 7, color: "#fff", weight: 3, fillColor: "#e63946", fillOpacity: 1
+      // Só as fotos com GPS entram no desenho, mas cada uma guarda seu número de nó
+      const comGps = fotos
+        .map((f, i) => ({ lat: f.lat, lon: f.lon, node: i + 1 }))
+        .filter(f => f.lat != null && f.lon != null);
+
+      const limites = L.latLngBounds(comGps.map(f => [f.lat, f.lon]));
+
+      comGps.forEach(f => {
+        L.circleMarker([f.lat, f.lon], {
+          radius: 3, color: "#1d70b8", weight: 1,
+          fillColor: "#1d70b8", fillOpacity: 0.7
+        }).on("click", () => irParaNode(f.node)).addTo(mini);
       });
 
-      let pontos = [];   // coordenadas das fotos, na ordem do KML
+      // Marcador da foto atual (criado por último para ficar por cima)
+      const atual = L.circleMarker([comGps[0].lat, comGps[0].lon], {
+        radius: 7, color: "#fff", weight: 3, fillColor: "#e63946", fillOpacity: 1
+      }).addTo(mini);
 
-      fetch(kmlUrl)
-        .then(r => r.text())
-        .then(txt => {
-          const geo = toGeoJSON.kml(new DOMParser().parseFromString(txt, "text/xml"));
-
-          const camada = L.geoJSON(geo, {
-            style: { color: "#1d70b8", weight: 4 },
-            pointToLayer: (f, latlng) => {
-              pontos.push(latlng);
-              return L.circleMarker(latlng, {
-                radius: 3, color: "#1d70b8", weight: 1,
-                fillColor: "#1d70b8", fillOpacity: 0.7
-              });
-            },
-            onEachFeature: (f, layer) => {
-              if (f.geometry.type === "Point") {
-                const i = pontos.length;   // índice deste ponto
-                layer.on("click", () => irParaNode(i));
-              }
-            }
-          }).addTo(mini);
-
-          mini.fitBounds(camada.getBounds(), { padding: [10, 10] });
-          atual.addTo(mini);
-          marcarPosicao(nodeAtual);
-        })
-        .catch(err => console.error("Minimapa:", err));
+      if (comGps.length > 1) {
+        mini.fitBounds(limites, { padding: [10, 10] });
+      } else {
+        mini.setView([comGps[0].lat, comGps[0].lon], 17);
+      }
 
       function marcarPosicao(n) {
-        const p = pontos[n - 1];   // node-1 é o ponto de índice 0
-        if (!p) return;
+        const f = fotos[n - 1];
+        if (!f || f.lat == null || f.lon == null) {
+          // Foto sem GPS: esconde o marcador em vez de mostrar um lugar errado
+          atual.setStyle({ opacity: 0, fillOpacity: 0 });
+          return;
+        }
+        const p = L.latLng(f.lat, f.lon);
+        atual.setStyle({ opacity: 1, fillOpacity: 1 });
         atual.setLatLng(p);
         if (!mini.getBounds().pad(-0.15).contains(p)) mini.panTo(p);
       }
+
+      marcarPosicao(nodeAtual);
 
       tour.addEventListener("node-changed", e => {
         marcarPosicao(parseInt(e.node.id.replace("node-", ""), 10));

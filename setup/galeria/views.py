@@ -3,7 +3,7 @@ from galeria.models import Fotografia, Categoria, Album
 from django.db.models import IntegerField
 from django.db.models.functions import Cast
 from django.http import Http404
-
+from .utils import fotos_em_ordem
 
 def index(request):
     #fotografias = Fotografia.objects.order_by("categoria").filter(publicada=True)
@@ -53,26 +53,45 @@ def streetView(request, album_id):
     defaultYaw = album.defaultYaw
     defaultPitch = album.defaultPitch
     pan = album.sphereCorrection_pan
-    tilt = album.sphereCorrection_tilt     
-    roll = album.sphereCorrection_roll  
+    tilt = album.sphereCorrection_tilt
+    roll = album.sphereCorrection_roll
     defaultYawInteger = int(defaultYaw.replace('deg', ''))
-    fotos = Fotografia.objects.filter(album=album.id).order_by('id')
+    fotos = list(fotos_em_ordem(album))
     inverterSentidoStreetView = album.inverterSentidoStreetView
+
     # ?foto=12 vem do mapa. Os nodes começam em 1, o índice do KML começa em 0.
     try:
         indice = int(request.GET.get("foto", 0))
     except ValueError:
         indice = 0
-    total = fotos.count()
+    total = len(fotos)
     start_node = max(1, min(indice + 1, total)) if total else 1
 
+    # Uma entrada por nó do tour, na mesma ordem; lat/lon ficam null se não houver GPS
+    dados_fotos = [
+        {
+            "url": f.foto.url if f.foto else "",
+            "nome": f.nome,
+            "lat": f.latitude,
+            "lon": f.longitude,
+        }
+        for f in fotos
+    ]
+    tem_mapa = any(d["lat"] is not None and d["lon"] is not None for d in dados_fotos)
+
     return render(request, 'galeria/streetview.html', {
-        "album": album, "fotos": fotos, "defaultYaw": defaultYaw,
-        "defaultYawInteger": defaultYawInteger, "defaultPitch": defaultPitch,
-        "pan": pan, "tilt": tilt, "roll": roll,
+        "album": album,
+        "fotos": fotos,
+        "defaultYaw": defaultYaw,
+        "defaultYawInteger": defaultYawInteger,
+        "defaultPitch": defaultPitch,
+        "pan": pan,
+        "tilt": tilt,
+        "roll": roll,
         "inverterSentidoStreetView": inverterSentidoStreetView,
         "start_node": start_node,
-        "kml_url": album.arquivo_kml.url if album.arquivo_kml else "",
+        "dados_fotos": dados_fotos,
+        "tem_mapa": tem_mapa,
     })
 
 def mapa(request, pk):

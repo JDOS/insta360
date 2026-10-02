@@ -29,6 +29,7 @@ DEBUG = True
 ALLOWED_HOSTS = ["localhost","sistemas.itti.org.br","200.236.20.133","127.0.0.1"]
 CSRF_TRUSTED_ORIGINS = ["https://localhost:8000", "http://127.0.0.1:8000", "https://127.0.0.1:8081","https://sistemas.itti.org.br:8081", "https://sistemas.itti.org.br", "http://sistemas.itti.org.br","http://127.0.0.1", "https://127.0.0.1"]
 
+X_FRAME_OPTIONS = "SAMEORIGIN"
 # Application definition
 
 INSTALLED_APPS = [
@@ -135,7 +136,6 @@ MEDIA_URL = "/media/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024 
@@ -143,3 +143,6 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
 
 DATA_UPLOAD_MAX_NUMBER_FILES = 1000
+
+#teste de gerar local irao apontar para essa base
+SITE_URL = "https://sistemas.itti.org.br"

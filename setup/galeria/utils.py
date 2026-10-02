@@ -13,7 +13,11 @@ GPS_IFD = 0x8825
 Image.MAX_IMAGE_PIXELS = None  # panoramas grandes passam do limite padrão
 
 LARGURA_MAX = 8000
-QUALIDADE = 82
+QUALIDADE = 85
+
+def fotos_em_ordem(album):
+    """Ordem oficial das fotos do álbum: a mesma do nome (0, 1, 2...)."""
+    return album.photos.order_by(Cast("nome", IntegerField()), "id")
 
 def reordenar_nomes(album_id):
     """Renumera as fotos do álbum em sequência (0, 1, 2, ...) mantendo a ordem atual."""
