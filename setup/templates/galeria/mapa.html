@@ -125,6 +125,18 @@
       return desc;
     }
 
+    function linksNoDominioAtual(html) {
+      const div = document.createElement("div");
+      div.innerHTML = html;
+      div.querySelectorAll("a[href]").forEach(a => {
+        const url = new URL(a.getAttribute("href"), location.href);
+        if (url.hostname.endsWith("itti.org.br")) {
+          a.href = url.pathname + url.search + url.hash;
+        }
+      });
+      return div.innerHTML;
+    }
+
     fetch(kmlUrl)
       .then(r => {
         if (!r.ok) throw new Error("Erro HTTP " + r.status);
@@ -155,7 +167,7 @@
 
           onEachFeature: (f, layer) => {
             const p = f.properties || {};
-            const desc = textoDescricao(p.description);
+            const desc = linksNoDominioAtual(textoDescricao(p.description));
 
             if (desc) {
               layer.bindPopup(desc);
