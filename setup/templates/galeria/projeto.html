@@ -33,26 +33,31 @@
         {% endwith %}
     <style>
 
-        .categoria-title{
+        .header-categoria {
+            position: relative;   /* o título passa a usar este container como referência */
+        }
+
+        .imagem-top {
+            display: block;       /* evita o espacinho embaixo que o inline-block cria */
+            width: 100%;
+            height: 500px;
+            object-fit: cover;
+        }
+
+        .categoria-title {
             position: absolute;
-            top: 30%;
+            top: 50%;             /* centro da imagem; use 30% se preferir mais para cima */
             left: 50%;
             transform: translate(-50%, -50%);
+            margin: 0;
             color: white;
             font-family: "Noto Sans Symbols", sans-serif;
             font-optical-sizing: auto;
-            font-size: 80px;
-            font-style: normal;
+            font-size: clamp(2rem, 6vw, 80px);  /* diminui em telas pequenas, máx. 80px */
+            text-align: center;
+            width: 90%;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);  /* legibilidade sobre fotos claras */
         }
-
-        .imagem-top{
-            position: relative;
-            display: inline-block;
-            width: 100%;
-            height: 500px; /* sets height = 100% of the container */
-            object-fit: cover; /* will make sure image covers the area and is cropped */
-        }
-
     </style>
 </head>
 
