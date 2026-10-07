@@ -3,6 +3,11 @@ from datetime import datetime
 from django.utils.text import slugify
 from django.core.validators import FileExtensionValidator
 
+from io import BytesIO
+from django.core.files.base import ContentFile
+from django.db import models
+from PIL import Image, ImageOps
+
 class Categoria(models.Model):
     nome = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=120, unique=True)
@@ -15,6 +20,29 @@ class Categoria(models.Model):
         ("-data_fotografia", "Data Decrescente"),
         ("data_fotografia", "Data Crescente"),
     ]
+
+    imagem_compartilhamento = models.ImageField(
+        upload_to="og/", blank=True, editable=False,
+        verbose_name="Imagem de compartilhamento (gerada automaticamente)",
+    )
+
+    def gerar_imagem_compartilhamento(self):
+        """Cria uma versão 1200x630 leve da foto, para o preview do WhatsApp."""
+        if self.imagem_compartilhamento:
+            self.imagem_compartilhamento.delete(save=False)
+        if not self.foto:
+            return
+
+        with self.foto.open("rb") as f:
+            img = Image.open(f)
+            img = ImageOps.exif_transpose(img).convert("RGB")
+            img = ImageOps.fit(img, (1200, 630), Image.LANCZOS)
+
+        buffer = BytesIO()
+        img.save(buffer, "JPEG", quality=80, optimize=True, progressive=True)
+        self.imagem_compartilhamento.save(
+            f"{self.slug}.jpg", ContentFile(buffer.getvalue()), save=False
+        )
 
     mostrar_data = models.BooleanField(
         default=False,
@@ -36,6 +64,19 @@ class Categoria(models.Model):
     def __str__(self):
         return self.nome
     
+    def save(self, *args, **kwargs):
+        # Descobre se a foto mudou antes de salvar
+        foto_mudou = True
+        if self.pk:
+            antiga = Categoria.objects.filter(pk=self.pk).values_list("foto", flat=True).first()
+            foto_mudou = antiga != self.foto.name
+
+        super().save(*args, **kwargs)
+
+        if foto_mudou:
+            self.gerar_imagem_compartilhamento()
+            super().save(update_fields=["imagem_compartilhamento"])
+
 class Album(models.Model):
     title = models.CharField('Título', max_length=200)
     foto = models.ImageField(upload_to="fotos/%Y/%m/%d/", blank=True)
