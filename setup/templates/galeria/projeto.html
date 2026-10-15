@@ -122,6 +122,16 @@
                         {% endif %}
                             <div class="card-body">
                                 <h5 class="card-title">{{album.title}}</h5>
+                                {% if album.legenda %}
+                                <h6 class="card-subtitle mb-3 text-muted fst-italic">
+                                    {{ album.legenda }}
+                                </h6>
+                                {% endif %}
+                                {% if album.descricao %}
+                                <p class="card-text descricao text-start" title="{{ fotografia.descricao }}">
+                                    {{ album.descricao|linebreaksbr }}
+                                </p>
+                                {% endif %}
                                 <p class="card-text"></p>
                                 {% if user.is_authenticated %}
                                 <a href="{% url 'album' album.id %}" class="btn btn-primary">Álbum</a>

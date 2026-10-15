@@ -93,7 +93,8 @@ class Album(models.Model):
         help_text='Arquivo .kml com o trajeto ou os pontos do álbum (opcional)'
     )
     slug = models.SlugField(max_length=200, unique=True, blank=True)
-
+    legenda = models.CharField(max_length=150, null=True, blank=True)
+    descricao = models.TextField(null=True, blank=True)
     # POSIÇÃO INICIAL DA CÂMERA
     defaultYaw = models.CharField(
         'Rotação Horizontal Inicial',
