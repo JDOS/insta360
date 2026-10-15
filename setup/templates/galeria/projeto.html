@@ -58,6 +58,15 @@
             width: 90%;
             text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);  /* legibilidade sobre fotos claras */
         }
+        .descricao {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #555;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;      /* mostra no máximo 3 linhas */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
     </style>
 </head>
 
@@ -88,7 +97,16 @@
 
                         <div class="card-body">
                             <h5 class="card-title">{{ fotografia.nome }}</h5>
-                            <p class="card-text">{{ fotografia.descricao }}</p>
+                            {% if fotografia.legenda %}
+                            <h6 class="card-subtitle mb-3 text-muted fst-italic">
+                                {{ fotografia.legenda }}
+                            </h6>
+                            {% endif %}
+                            {% if fotografia.descricao %}
+                            <p class="card-text descricao text-start" title="{{ fotografia.descricao }}">
+                                {{ fotografia.descricao|linebreaksbr }}
+                            </p>
+                            {% endif %}
                             {% if fotografia.foto %}
                             <a href="{% url 'imagem360' fotografia.id %}" class="btn btn-primary">Visualizar</a>
                             <a href="{% url 'imagem360Animacao' fotografia.id %}" class="btn btn-primary">Animacao</a>
