@@ -67,7 +67,7 @@
         {% if categoria.foto %}
              <img src="{{categoria.foto.url}}" class="imagem-top" alt="...">
         {% endif %}
-        <h1 class="categoria-title">{{categoria.nome}}</h1>
+        <h1 class="categoria-title">{% if categoria.mostrar_titulo_capa %} {{categoria.nome}} {% endif %}</h1>
 
 
     </div>

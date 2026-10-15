@@ -44,6 +44,11 @@ class Categoria(models.Model):
             f"{self.slug}.jpg", ContentFile(buffer.getvalue()), save=False
         )
 
+    mostrar_titulo_capa = models.BooleanField(
+        default=True,
+        verbose_name="Mostrar Titulo Capa",
+    )
+
     mostrar_data = models.BooleanField(
         default=False,
         verbose_name="Mostrar data nas fotos",
