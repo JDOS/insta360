@@ -13,9 +13,19 @@ from django.utils.html import format_html
 from .utils import extrair_gps, reduzir_imagem
 
 from .kml import salvar_kml
+from django import forms
+
+class CategoriaForm(forms.ModelForm):
+    class Meta:
+        model = Categoria
+        fields = "__all__"
+        widgets = {
+            "nome": forms.Textarea(attrs={"rows": 2}),
+        }
 
 @admin.register(Categoria)
 class CategoriaAdmin(admin.ModelAdmin):
+    form = CategoriaForm
     list_display = ("nome", "slug")
     search_fields = ("nome",)
     prepopulated_fields = {"slug": ("nome",)}  # preenche o slug automaticamente a partir do nome
