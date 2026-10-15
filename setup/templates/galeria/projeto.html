@@ -132,7 +132,6 @@
                                     {{ album.descricao|linebreaksbr }}
                                 </p>
                                 {% endif %}
-                                <p class="card-text"></p>
                                 {% if user.is_authenticated %}
                                 <a href="{% url 'album' album.id %}" class="btn btn-primary">Álbum</a>
                                 {% endif %}
